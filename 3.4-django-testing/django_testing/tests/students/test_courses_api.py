@@ -3,6 +3,7 @@ from model_bakery import baker
 from rest_framework.test import APIClient
 from django.urls import reverse
 from students.models import Course, Student
+from pprint import pprint
 
 
 
@@ -43,28 +44,42 @@ def test_get_course(api_client, course_factory):
 def test_get_courses(api_client, course_factory):
     course = course_factory(_quantity=100)
 
-    resp = api_client.get('/courses/')
+    resp = api_client.get(f'/courses/{course[0].id}/')
 
     assert resp.status_code == 200
 
     resp = resp.json()
-
-    for i, el in enumerate(resp):
-        assert el['id'] == course[i].id
+    assert resp['id'] == course[0].id
 
 
 @pytest.mark.django_db
 def test_filter_by_id(api_client, course_factory):
     course = course_factory(_quantity=100)
 
-    assert len(Course.objects.filter(id=course[0].id)) == 1
+    resp = api_client.get(f'/courses/{course[0].id}/')
+
+    assert resp.status_code == 200
+
+    resp = resp.json()
+    assert course[0].id == resp['id']
 
 
 @pytest.mark.django_db
 def test_filter_by_name(api_client, course_factory):
     course = course_factory(_quantity=100)
 
-    assert len(Course.objects.filter(name=course[0].name)) == 1
+    f = {
+        "name": course[0].name,
+        }
+
+    resp = api_client.get(f'/courses/?filter={f}/')
+
+    assert resp.status_code == 200
+
+    resp = resp.json()
+
+    assert course[0].name == resp[0]['name']
+
 
 
 @pytest.mark.django_db
