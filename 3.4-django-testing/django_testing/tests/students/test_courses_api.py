@@ -56,12 +56,18 @@ def test_get_courses(api_client, course_factory):
 def test_filter_by_id(api_client, course_factory):
     course = course_factory(_quantity=100)
 
-    resp = api_client.get(f'/courses/{course[0].id}/')
+    f = {
+        "id": course[0].id,
+    }
+
+    resp = api_client.get(f'/courses/', f)
 
     assert resp.status_code == 200
 
     resp = resp.json()
-    assert course[0].id == resp['id']
+
+    assert len(Course.objects.filter(id=course[0].id)) == len(resp)
+    assert course[0].id == resp[0]["id"]
 
 
 @pytest.mark.django_db
@@ -72,13 +78,14 @@ def test_filter_by_name(api_client, course_factory):
         "name": course[0].name,
         }
 
-    resp = api_client.get(f'/courses/?filter={f}/')
+    resp = api_client.get(f'/courses/', f)
 
     assert resp.status_code == 200
 
     resp = resp.json()
 
     assert course[0].name == resp[0]['name']
+    assert len(Course.objects.filter(name=course[0].name)) == len(resp)
 
 
 
